@@ -13,6 +13,24 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::post('/user',[
+Route::post('/user/signup',[
 	'uses' => 'UserController@signup'
+]);
+
+Route::post('/user/signin',[
+	'uses' => 'UserController@signin'
+]);
+Route::get('/shop/getall',[
+	'uses' => 'ShopController@index'
+]);
+
+Route::post('/shop',[
+	'uses' => 'ShopController@store'
+]);
+
+Route::put('/shop/{id}',[
+	'uses' => 'ShopController@update'
+]);
+Route::delete('/shop/{id}',[
+	'uses' => 'ShopController@destroy'
 ]);

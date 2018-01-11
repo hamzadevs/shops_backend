@@ -26,4 +26,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function shops()
+    {
+      return $this->belongsToMany('App\Models\Shop', 'users_shops', 'shop_id', 'user_id');
+    }
 }

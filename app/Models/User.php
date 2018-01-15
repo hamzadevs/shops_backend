@@ -29,6 +29,6 @@ class User extends Authenticatable
 
     public function shops()
     {
-      return $this->belongsToMany('App\Models\Shop', 'users_shops', 'shop_id', 'user_id');
+      return $this->belongsToMany('App\Models\Shop', 'users_shops', 'user_id', 'shop_id')->withTimestamps();
     }
 }

@@ -56,5 +56,22 @@ class UserController extends Controller{
 					'token' => $token
 				],200);
 	}
+	/**
+		* Log out
+		* Invalidate the token, so user cannot use it anymore
+		* They have to relogin to get a new token
+		*
+		* @param Request $request
+		*/
+	 public function logout(Request $request) {
+			 $this->validate($request, ['token' => 'required']);
+			 try {
+					 JWTAuth::invalidate($request->input('token'));
+					 return response()->json(['res' => true],200);
+			 } catch (JWTException $e) {
+					 // something went wrong whilst attempting to encode the token
+					 return response()->json(['res' => false, 'message' => 'Failed to logout, please try again.'], 500);
+			 }
+	 }
 
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Shop;
 use JWTAuth;
+use Carbon\Carbon;
 
 class ShopController extends Controller
 {
@@ -15,8 +16,12 @@ class ShopController extends Controller
      */
     public function index()
     {
-      $shops = Shop::select('name','id','distance');
-      $shop_sorted = $shops->orderBy('distance','asc')->get();
+      $user = JWTAuth::parseToken()->toUser();
+      //$shops = Shop::select('name','id','distance');
+      $excepted_ids = $user->shops()->wherePivot('like',true)->get()->pluck('id')->toArray();
+      $excepted_ids += $user->shops()->wherePivot('dislike',true)->wherePivot('dislike_date','<',Carbon::now(-2)->toDateTimeString())->get()->pluck('id')->toArray();
+      $shops_filtered = Shop::all()->except($excepted_ids);
+      $shop_sorted = $shops_filtered->sortBy('distance')->toArray();
         return response()->json([
     			'shops' => $shop_sorted
     		],201);
@@ -114,11 +119,49 @@ class ShopController extends Controller
       return response()->json(['massage' => "Shop deleted!"],200);
     }
 
-    public function liked_shop($id)
+    public function like($id)
     {
       $shop = Shop::find($id);
+      if(!$shop){
+        return response()->json(['message'=>"shop doesn't exist!" ],404);
+      }
       $user = JWTAuth::parseToken()->toUser();
+      if($user->shops()->wherePivot('shop_id',$shop->id)->get()->isEmpty())
+        $shop->users()->attach($user->id);
+      else $user->shops()->updateExistingPivot($shop->id, array('like' => true,'dislike' => false,'dislike_date' => NULL));
+
+      $shop->users()->syncWithoutDetaching($user->id);
+      return response()->json(['massage' => "Shop liked!"],200);
     }
+
+    public function dislike($id)
+    {
+      $shop = Shop::find($id);
+      if(!$shop){
+        return response()->json(['message'=>"shop doesn't exist!" ],404);
+      }
+      $user = JWTAuth::parseToken()->toUser();
+      if($user->shops()->wherePivot('shop_id',$shop->id)->get()->isEmpty())
+        return response()->json(['message'=>"Shop doesn't exist in preffered list!" ],404);
+      $user->shops()->updateExistingPivot($shop->id, array('like' => false,'dislike' => true,'dislike_date' => date("Y-m-d H:i:s")));
+      return response()->json(['massage' => "Shop dislike!"],200);
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getPreffered()
+    {
+      $user = JWTAuth::parseToken()->toUser();
+      $shops_preffered = $user->shops()->wherePivot('like',true)->get();
+        return response()->json([
+    			'shops' => $shops_preffered
+    		],201);
+    }
+
+
 
 
 }

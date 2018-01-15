@@ -20,10 +20,11 @@ class ShopController extends Controller
       //$shops = Shop::select('name','id','distance');
       $excepted_ids = $user->shops()->wherePivot('like',true)->get()->pluck('id')->toArray();
       $excepted_ids += $user->shops()->wherePivot('dislike',true)->wherePivot('dislike_date','<',Carbon::now(-2)->toDateTimeString())->get()->pluck('id')->toArray();
-      $shops_filtered = Shop::all()->except($excepted_ids);
-      $shop_sorted = $shops_filtered->sortBy('distance')->toArray();
+      $shops_filtered = Shop::select('*')->orderBy('distance','ASC');
+      $shop_sorted = $shops_filtered->get()->except($excepted_ids);
         return response()->json([
-    			'shops' => $shop_sorted
+    			'shops' => $shop_sorted,
+          'excepted_ids' => $excepted_ids
     		],201);
     }
 

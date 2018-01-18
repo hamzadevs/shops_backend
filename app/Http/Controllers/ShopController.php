@@ -19,7 +19,7 @@ class ShopController extends Controller
       $user = JWTAuth::parseToken()->toUser();
       //$shops = Shop::select('name','id','distance');
       $excepted_ids = $user->shops()->wherePivot('like',true)->get()->pluck('id')->toArray();
-      $excepted_ids += $user->shops()->wherePivot('dislike',true)->wherePivot('dislike_date','<',Carbon::now(-2)->toDateTimeString())->get()->pluck('id')->toArray();
+      $excepted_ids = array_merge($excepted_ids,$user->shops()->wherePivot('like',false)->wherePivot('dislike_date','>',Carbon::now(-2)->toDateTimeString())->get()->pluck('id')->toArray());
       $shops_filtered = Shop::select('*')->orderBy('distance','ASC');
       $shop_sorted = $shops_filtered->get()->except($excepted_ids);
         return response()->json([
@@ -132,7 +132,7 @@ class ShopController extends Controller
       else $user->shops()->updateExistingPivot($shop->id, array('like' => true,'dislike' => false,'dislike_date' => NULL));
 
       $shop->users()->syncWithoutDetaching($user->id);
-      return response()->json(['massage' => "Shop liked!"],200);
+      return response()->json(['message' => "Shop liked!"],200);
     }
 
     public function dislike($id)
@@ -145,7 +145,7 @@ class ShopController extends Controller
       if($user->shops()->wherePivot('shop_id',$shop->id)->get()->isEmpty())
         return response()->json(['message'=>"Shop doesn't exist in preffered list!" ],404);
       $user->shops()->updateExistingPivot($shop->id, array('like' => false,'dislike' => true,'dislike_date' => date("Y-m-d H:i:s")));
-      return response()->json(['massage' => "Shop dislike!"],200);
+      return response()->json(['message' => "Shop dislike!"],200);
     }
 
     /**

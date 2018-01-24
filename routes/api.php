@@ -13,6 +13,45 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/user/signup',[
+	'uses' => 'UserController@signup'
+]);
+
+Route::post('/user/signin',[
+	'uses' => 'UserController@signin'
+]);
+
+Route::post('/shop',[
+	'uses' => 'ShopController@store'
+]);
+
+Route::put('/shop/{id}',[
+	'uses' => 'ShopController@update'
+]);
+Route::delete('/shop/{id}',[
+	'uses' => 'ShopController@destroy'
+]);
+
+Route::middleware(['jwt.auth'])->group(function () {
+	Route::get('/shop/getall',[
+		'uses' => 'ShopController@index'
+	]);
+	Route::get('/shop/getpreffered',[
+		'uses' => 'ShopController@getPreffered'
+	]);
+	Route::get('isloggedin', function(){
+      return response()->json(array('res' => true,'message'=>'you are logged in!'));
+  });
+
+	Route::get('logout',[
+    'uses' => 'UserController@logout'
+  ]);
+
+	Route::get('/shop/like/{id}',[
+		'uses' => 'ShopController@like'
+	]);
+
+	Route::get('/shop/dislike/{id}',[
+		'uses' => 'ShopController@dislike'
+	]);
 });
